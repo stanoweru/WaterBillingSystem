@@ -14,12 +14,14 @@ class Billing_model extends CORE_Model{
 
     function get_customer_billing_receivables($type_id){
     	$sql = "SELECT
-    				main.*
+    				main.*,metin.serial_no
     			FROM
     		(SELECT 
     			service_connection.customer_id,
     			service_connection.connection_id,
 			    service_connection.account_no,
+			    service_connection.meter_inventory_id,
+
 			    ".($type_id==1?" service_connection.receipt_name ":" service_connection.customer_name ")." as customer_name,
 			    service_connection.address,
 			   (COALESCE(dis_penalty.dis_penalty, 0) + COALESCE(bill_penalty.bill_penalty, 0)) as total_penalty,
@@ -30,6 +32,7 @@ class Billing_model extends CORE_Model{
 			    (SELECT 
 			        c.customer_id,
 			            sc.connection_id,
+			            sc.meter_inventory_id,
 			            sc.account_no,
  						sc.receipt_name,
 			            sc.address,
@@ -133,7 +136,7 @@ class Billing_model extends CORE_Model{
 								ELSE # WITH PAYMENT BEFORE DUE
 									(CASE WHEN DATE(NOW()) > DATE(b.due_date)
 									THEN #'with payment before due and current date after  due'
-										(CASE WHEN payment.payment_amount >= b.amount_due
+										(CASE WHEN payment.payment_amount >= (b.amount_due + b.charges_amount)
 											THEN 0 # NO PENALTY
 											ELSE b.penalty_amount #WITH PENALTY
 											END)
@@ -166,6 +169,7 @@ class Billing_model extends CORE_Model{
 			    FROM
 			        billing_payments bp
 			    LEFT JOIN service_connection sc ON sc.connection_id = bp.connection_id
+			    
 			    LEFT JOIN customers c ON c.customer_id = sc.customer_id
 			    WHERE
 			        bp.is_active = TRUE
@@ -173,7 +177,9 @@ class Billing_model extends CORE_Model{
 			    ".($type_id==1?" GROUP BY sc.connection_id":" GROUP BY sc.customer_id").") AS payment 
 			    ".($type_id==1?" ON billing.connection_id = payment.connection_id":" ON billing.customer_id = payment.customer_id")."
 				".($type_id==1?" GROUP BY service_connection.connection_id":" GROUP BY service_connection.customer_id").") main
+				LEFT JOIN meter_inventory metin ON metin.meter_inventory_id = main.meter_inventory_id
 				WHERE main.balance > 0
+				ORDER BY metin.serial_no ASC
 				";
     	return $this->db->query($sql)->result();
     }
@@ -235,7 +241,7 @@ class Billing_model extends CORE_Model{
                                         ELSE # WITH PAYMENT BEFORE DUE
 											(CASE WHEN DATE(NOW()) > DATE(b.due_date)
                                             THEN #'with payment before due and current date after  due'
-												(CASE WHEN payment.payment_amount >= b.amount_due
+												(CASE WHEN payment.payment_amount >= (b.amount_due + b.charges_amount)
 													THEN 0 # NO PENALTY
                                                     ELSE b.penalty_amount #WITH PENALTY
                                                     END)
@@ -559,9 +565,9 @@ class Billing_model extends CORE_Model{
 						b.billing_id,
 						0 as disconnection_id,
 						b.amount_due as meter_amount_due_comparison,
-		                IF('$row->date_input' > b.due_date AND IFNULL(payment.paid_amount,0) > b.amount_due, (b.amount_due + b.penalty_amount + b.charges_amount),(b.amount_due + b.charges_amount)) receivable_amount,
+		                IF('$row->date_input' > b.due_date AND IFNULL(payment.paid_amount,0) > (b.amount_due +  b.charges_amount), (b.amount_due + b.penalty_amount + b.charges_amount),(b.amount_due + b.charges_amount)) receivable_amount,
 						IFNULL(payment.paid_amount,0) as paid_amount,
-		                IF('$row->date_input' > b.due_date AND IFNULL(payment.paid_amount,0) > b.amount_due, ((b.amount_due + b.penalty_amount + b.charges_amount)  - IFNULL(payment.paid_amount,0)),((b.amount_due + b.charges_amount) - IFNULL(payment.paid_amount,0))) as amount_due,
+		                IF('$row->date_input' > b.due_date AND IFNULL(payment.paid_amount,0) > (b.amount_due + b.charges_amount), ((b.amount_due + b.penalty_amount + b.charges_amount)  - IFNULL(payment.paid_amount,0)),((b.amount_due + b.charges_amount) - IFNULL(payment.paid_amount,0))) as amount_due,
 						0 as payment_amount
 
 						FROM billing b
@@ -636,9 +642,9 @@ class Billing_model extends CORE_Model{
 					CONCAT(m.month_name, ' ', mrp.meter_reading_year) as description,
 					b.billing_id,
 					0 as disconnection_id,
-	                IF('$row->date_input' > b.due_date AND IFNULL(payment.paid_amount,0) > b.amount_due, (b.amount_due + b.penalty_amount + b.charges_amount),(b.amount_due + b.charges_amount)) receivable_amount,
+	                IF('$row->date_input' > b.due_date AND IFNULL(payment.paid_amount,0) > (b.amount_due + b.charges_amount), (b.amount_due + b.penalty_amount + b.charges_amount),(b.amount_due + b.charges_amount)) receivable_amount,
 					IFNULL(payment.paid_amount,0) as paid_amount,
-	                IF('$row->date_input' > b.due_date AND IFNULL(payment.paid_amount,0) > b.amount_due, ((b.amount_due + b.penalty_amount + b.charges_amount)  - IFNULL(payment.paid_amount,0)),((b.amount_due + b.charges_amount) - IFNULL(payment.paid_amount,0))) as amount_due,
+	                IF('$row->date_input' > b.due_date AND IFNULL(payment.paid_amount,0) > (b.amount_due + b.charges_amount), ((b.amount_due + b.penalty_amount + b.charges_amount)  - IFNULL(payment.paid_amount,0)),((b.amount_due + b.charges_amount) - IFNULL(payment.paid_amount,0))) as amount_due,
 					0 as payment_amount
 
 					FROM billing b
@@ -799,9 +805,9 @@ class Billing_model extends CORE_Model{
 				CONCAT(m.month_name, ' ', mrp.meter_reading_year) as description,
 				b.billing_id,
 				0 as disconnection_id,
-                IF('$filter_date' > b.due_date AND IFNULL(payment_before_due.paid_amount,0) < b.amount_due, (b.amount_due + b.penalty_amount + b.charges_amount),(b.amount_due + b.charges_amount)) receivable_amount,
+                IF('$filter_date' > b.due_date AND IFNULL(payment_before_due.paid_amount,0) < (b.amount_due + b.charges_amount), (b.amount_due + b.penalty_amount + b.charges_amount),(b.amount_due + b.charges_amount)) receivable_amount,
 				IFNULL(payment.paid_amount,0) as paid_amount,
-                IF('$filter_date' > b.due_date AND IFNULL(payment_before_due.paid_amount,0) < b.amount_due, ((b.amount_due + b.penalty_amount + b.charges_amount)  - IFNULL(payment.paid_amount,0)),((b.amount_due + b.charges_amount) - IFNULL(payment.paid_amount,0))) as amount_due,
+                IF('$filter_date' > b.due_date AND IFNULL(payment_before_due.paid_amount,0) < (b.amount_due + b.charges_amount), ((b.amount_due + b.penalty_amount + b.charges_amount)  - IFNULL(payment.paid_amount,0)),((b.amount_due + b.charges_amount) - IFNULL(payment.paid_amount,0))) as amount_due,
 				0 as payment_amount
 
 				FROM billing b

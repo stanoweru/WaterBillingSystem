@@ -407,7 +407,7 @@ $(document).ready(function(){
                 },
                 { targets:[1],data: "other_charge_no" },
                 { targets:[2],data: "receipt_name" },
-                { targets:[3],data: "account_no" },
+                { targets:[3],data: "serial_no" },
                 { targets:[4],data: "date_invoice" },
                 { targets:[5],data: "remarks",render: $.fn.dataTable.render.ellipsis(60)},
                 {

@@ -286,7 +286,7 @@ $(document).ready(function(){
                     "data":           null,
                     "defaultContent": ""
                 },
-                { targets:[3],data: "control_no" },
+                { targets:[3],data: "serial_no" },
                 { targets:[4],data: "account_no" },
                 { targets:[5],data: "receipt_name" },
                 {

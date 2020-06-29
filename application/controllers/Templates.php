@@ -6332,7 +6332,7 @@ class Templates extends CORE_Controller {
 
 
                     if ($type_id == 1){
-                        $excel->getActiveSheet()->setCellValue('A'.$i,$receivable->account_no);
+                        $excel->getActiveSheet()->setCellValue('A'.$i,$receivable->serial_no);
                         $excel->getActiveSheet()->setCellValue('B'.$i,$receivable->customer_name);
                         $excel->getActiveSheet()->setCellValue('C'.$i,$receivable->address);
                         $excel->getActiveSheet()->getStyle('D'.$i)->getNumberFormat()->setFormatCode('###,##0.00;(###,##0.00)');
