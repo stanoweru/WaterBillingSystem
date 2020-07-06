@@ -494,7 +494,7 @@ class Billing_model extends CORE_Model{
 					            mri.meter_reading_period_id,
 					            mri.date_input,
 					            sc.contract_type_id, 
-					            CONCAT(mrp.month_id,'/15/',mrp.meter_reading_year) as due_date,
+					            DATE_FORMAT(DATE_ADD(DATE_FORMAT(CONCAT(mrp.meter_reading_year,'-',mrp.month_id,'-15'),'%Y-%m-%d'), INTERVAL 1 MONTH), '%m/%d/%Y') as due_date,
 					            MONTH(DATE_SUB(mrp.meter_reading_period_start, INTERVAL 1 MONTH)) as arrears_month_id,
 					            (CASE 
 					            	WHEN sc.contract_type_id = 1

@@ -204,7 +204,7 @@ class Service_disconnection extends CORE_Controller {
                 $m_disconnection->service_date=$service_date;
 
                 $current = date('Y-m',strtotime($this->input->post('service_date',TRUE)));
-                $m_disconnection->due_date =  date('Y-m-d',strtotime($current.'-15'));
+                $m_disconnection->due_date =  date('Y-m-d',strtotime($current.'-15 +1 month'));
                 $m_disconnection->date_disconnection_date=$date_disconnection_date;
                 $m_disconnection->service_no=$service_no;
                 $m_disconnection->disconnection_reason_id=$this->input->post('disconnection_reason_id',TRUE);
@@ -329,7 +329,7 @@ class Service_disconnection extends CORE_Controller {
                 $m_disconnection->last_meter_reading=$this->input->post('last_meter_reading',TRUE);
                 $m_disconnection->disconnection_notes=$this->input->post('disconnection_notes',TRUE);
                 $m_disconnection->previous_id=$this->input->post('previous_id',TRUE);
-                $m_disconnection->previous_status_id=$status_id;
+                // $m_disconnection->previous_status_id=$status_id;
 
                 $m_disconnection->default_matrix_id=$this->get_numeric_value($this->input->post('default_matrix_id',TRUE));
                 $m_disconnection->rate_amount=$this->get_numeric_value($this->input->post('rate_amount',TRUE));

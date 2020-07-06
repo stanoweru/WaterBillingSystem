@@ -79,7 +79,7 @@
                 <?php if($type_id == 1){ ?> <td><?php echo $receivable->serial_no; ?></td> <?php }?>
                 <td><?php echo $receivable->customer_name; ?></td>
                 <td><?php echo $receivable->address; ?></td>
-                <td style="text-align: right;"><?php echo number_format($receivable->fee,2); ?></td>
+                <td style="text-align: right;"><?php echo $receivable->amount_due; ?></td>
                 <td style="text-align: right;"><?php echo number_format($receivable->payment,2); ?></td>
                 <td style="text-align: right;"><b><?php echo number_format($receivable->balance,2); ?></b></td>
             </tr>
