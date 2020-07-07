@@ -380,7 +380,7 @@ $(document).ready(function(){
         });
 
         meterins = new Bloodhound({
-            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('account_no','serial_no','receipt_name'),
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('account_no','serial_no','receipt_name','serial_no_2'),
             queryTokenizer: Bloodhound.tokenizers.whitespace,
             local : meterins
         });

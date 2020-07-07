@@ -15,6 +15,7 @@ class Meter_reading_period_model extends CORE_Model {
 			sc.receipt_name,
 			c.customer_name,
 			mi.serial_no,
+			TRIM(LEADING "0" FROM mi.serial_no) as serial_no_2,
 			main.current_reading as previous_reading,
 			main.applicable_month,
 			DATE_FORMAT(main.applicable_month,"%b %Y") as previous_month
